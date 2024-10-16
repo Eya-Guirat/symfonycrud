@@ -1,0 +1,17 @@
+ <table>
+        <tr>
+        <th>Id</th>
+        <th>username</th>
+        <th>Email</th>
+
+        </tr>
+    
+    {% for author in authors %}
+    <tr>
+    <td>{{author.id}}</td>
+    <td>{{author.username}} </td>
+    <td>{{author.email}}</td>
+    <td><a href="{{ path('app_deleteauthor', { 'id': author.id }) }}">Delete</a></td>
+    </tr>
+    {% endfor %}
+    </table>
