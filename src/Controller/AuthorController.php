@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Author;
+use App\Form\AuthorType;
 use App\Repository\AuthorRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -20,16 +22,27 @@ class AuthorController extends AbstractController
     }
 
     #[Route('/author/add', name: 'app_addauthor')]
-    public function addAuthor(ManagerRegistry $manager)
+    public function addAuthor(ManagerRegistry $manager, Request $req)
     {
-        $em= $manager->getManager();
-        $author1 = new Author();
-        $author1->setUsername('eya');
-        $author1->setEmail('eya@esprit.com'); 
-        
-        $em->persist($author1);
-        $em->flush();
-        return new Response ('Author added');
+        $author = new Author();
+        $form = $this->createForm(AuthorType::class,$author);
+
+        $form->handleRequest($req);
+
+        if($form->isSubmitted())
+        {
+            $em= $manager->getManager();
+            $em->persist($author);
+            $em->flush();
+            return $this->redirectToRoute('app_getallauthor');
+        }
+
+
+        return $this->render('author/formAuthor.html.twig',[
+
+            'f'=>$form->createView()
+      
+            ]);
     }
 
     #[Route('/author/getall', name: 'app_getallauthor')]
@@ -44,15 +57,30 @@ class AuthorController extends AbstractController
     }
 
     #[Route('/author/update/{id}', name: 'app_updateauthor')]
-    public function updateAuthor(ManagerRegistry $manager, AuthorRepository $repo, $id )
+    public function updateAuthor(ManagerRegistry $manager, AuthorRepository $repo, $id, Request $req,Author $author )
     {
+
+        $form = $this->createForm(AuthorType::class,$author);
         $em= $manager->getManager();
-        $author1 = $repo->find($id);
-        $author1->setUsername('girly');
 
-        $em->flush();
+        $form->handleRequest($req);
 
-        return new Response ('Author edited');
+        if($form->isSubmitted())
+                    {
+                    $em->flush();
+                    return $this->redirectToRoute('app_getallauthor');
+                    }
+
+
+        #$author1 = $repo->find($id);
+        #$author1->setUsername('girly');
+        return $this->render('author/formAuthor.html.twig',[
+
+            'f'=>$form->createView()
+      
+            ]);
+
+        #return new Response ('Author edited');
     }
 
 
@@ -67,5 +95,7 @@ class AuthorController extends AbstractController
 
         return $this->redirectToRoute('app_getallauthor');
     }
+
+   
 
 }

@@ -40,4 +40,17 @@ class BookRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+
+    public function findBooksByDateRange(\DateTimeInterface $startDate, \DateTimeInterface $endDate)
+{
+    return $this->createQueryBuilder('b')
+        ->andWhere('b.publicationDate BETWEEN :start AND :end')
+        ->setParameter('start', $startDate->format('Y-m-d'))
+        ->setParameter('end', $endDate->format('Y-m-d'))
+        ->getQuery()
+        ->getResult();
+}
+
+
 }

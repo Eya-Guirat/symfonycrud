@@ -1,9 +1,19 @@
+ 
+ <h2>Search Books by Publication Date</h2>
+
+{{ form_start(form) }}
+    {{ form_row(form.startDate, {'attr': {'class': 'form-control'}}) }}
+    {{ form_row(form.endDate, {'attr': {'class': 'form-control'}}) }}
+    <button class="btn btn-primary">{{ form_widget(form.search) }}</button>
+{{ form_end(form) }}
+ 
  <table>
         <tr>
         <th>Id</th>
         <th>Title</th>
         <th>Publication Date</th>
         <th>Is enabled</th>
+        <th>Author</th>
 
         </tr>
     
@@ -12,7 +22,8 @@
     <td>{{book.id}}</td>
     <td>{{book.title}} </td>
     <td>{{book.publicationDate |date('Y-m-d') }}</td>
-    <td>{{book.enabled}}</td>
+    <td>{{book.enabled ? 'Yes' : 'No'}}</td>
+    <td>{{book.author.username}}</td>
     <td><a href="{{ path('app_deletebook', { 'id': book.id }) }}">Delete</a></td>
     </tr>
     {% endfor %}

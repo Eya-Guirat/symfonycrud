@@ -3,9 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\Book;
+use App\Form\BookType;
+use App\Form\DateRangeType;
+use App\Repository\AuthorRepository;
 use App\Repository\BookRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -20,47 +24,81 @@ class BookController extends AbstractController
     }
 
     #[Route('/book/add', name: 'app_addbook')]
-    public function addBook(ManagerRegistry $manager){
-        $em= $manager->getManager();
-        $book1 = new Book();
-        $book1->setTitle('The Corpse in the Night');
-        $book1->setPublicationDate(new \DateTime('2024-01-01'));
-        $book1->setEnabled('true');
+    public function addBook(ManagerRegistry $manager, AuthorRepository $repository, Request $req){
 
-        $book2 = new Book();
-        $book2->setTitle('Sign of the Burnt Turnip');
-        $book2->setPublicationDate(new \DateTime('2024-02-02'));
-        $book2->setEnabled('true');
+        $book = new Book();
 
-        $em->persist($book2);
-        $em->flush();
-        return new Response ('Book added');
+        $form = $this->createForm(BookType::class,$book);
+
+       
+        $form->handleRequest($req);
+
+        if($form->isSubmitted())
+        {
+            $em= $manager->getManager();
+            $em->persist($book);
+            $em->flush();
+            return $this->redirectToRoute('app_getallbook');
+        }
+
+        return $this->render('book/formBook.html.twig',[
+
+            'f'=>$form->createView()
+      
+            ]);
+
     }
 
-    #[Route('/book/getall', name: 'app_getallbook')]
-    public function getAllBook(BookRepository $repository)
+    #[Route('/book/getall', name: 'app_getallbooks')]
+    public function getAllBooks(Request $request, BookRepository $bookRepository): Response
     {
-        $books = $repository->findAll();
+        $form = $this->createForm(DateRangeType::class);
+        $form->handleRequest($request);
+    
+        // Default to fetching all books
+        $books = $bookRepository->findAll();
+    
+        // Check if the form is submitted and valid for date range filtering
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $startDate = $data['startDate'];
+            $endDate = $data['endDate'];
+    
+            // Fetch books within the specified date range
+            $books = $bookRepository->findBooksByDateRange($startDate, $endDate);
+        }
+    
         return $this->render('book/index.html.twig', [
-            'books' => $books 
-
+            'form' => $form->createView(),
+            'books' => $books,
         ]);
-
     }
+    
 
 
     #[Route('/book/update/{id}', name: 'app_updatebook')]
-    public function updateBook(ManagerRegistry $manager, BookRepository $repo, $id )
+    public function updateBook(ManagerRegistry $manager, BookRepository $repo, $id, Book $book, Request $req )
     {
+
+        $form = $this->createForm(BookType::class,$book);
         $em = $manager->getManager();
-        $book1 = $repo->find($id);
-        $book1->setTitle('The Jumping Clock');
-
-        $em->flush();
-
         
 
-        return new Response ('Book edited');
+        $form->handleRequest($req);
+
+        if($form->isSubmitted())
+                    {
+                    $em->flush();
+                    return $this->redirectToRoute('app_getallbook');
+                    }
+
+                    return $this->render('book/formBook.html.twig',[
+
+                        'f'=>$form->createView()
+                  
+                        ]);
+            
+
     }
 
 
@@ -75,5 +113,7 @@ class BookController extends AbstractController
 
         return $this->redirectToRoute('app_getallbook');
     }
+
+
 
 }
